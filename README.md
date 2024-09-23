@@ -1,2 +1,2 @@
-# dts-health-checks
-Repository for health checks of DTS applications - Référentiel pour les vérifications de l'état de santé des applications DTS
+# dts-wide
+Repository to centralize the common DTS components - Référentiel pour centraliser les composants communs de DTS
