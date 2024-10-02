@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DTS-STN health check response",
+  "required": ["status", "responseTime"],
+  "type": "object",
+  "definitions": {
+    "healthStatus": {
+      "enum": ["HEALTHY", "UNHEALTHY", "UNKNOWN"]
+    }
+  },
+  "properties": {
+    "status": {
+      "$ref": "#/definitions/healthStatus"
+    },
+    "version": {
+      "type": "string"
+    },
+    "buildId": {
+      "type": "string"
+    },
+    "responseTime": {
+      "type": "integer"
+    },
+    "components": {
+      "required": ["name", "status", "responseTime"],
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/definitions/healthStatus"
+            },
+            "responseTime": {
+              "type": "integer"
+            },
+            "metadata": {
+              "type": "array",
+              "items": [
+                {
+                  "additionalProperties": {
+                    "type": ["boolean", "number", "string"]
+                  }
+                }
+              ]
+            },
+            "errorDetails": {
+              "type": "string"
+            },
+            "stackTrace": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

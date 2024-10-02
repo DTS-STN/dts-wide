@@ -1,0 +1,10 @@
+{
+  "name": "@dts-stn/dts-wide",
+  "version": "0.0.0",
+  "workspaces": [
+    "packages/health-checks"
+  ],
+  "devDependencies": {
+    "@changesets/cli": "^2.27.9"
+  }
+}
