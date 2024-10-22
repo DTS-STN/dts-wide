@@ -1,6 +1,6 @@
 {
   "name": "@dts-stn/health-checks",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A health check module for DTS NodeJS applications.",
   "type": "module",
   "license": "MIT",
