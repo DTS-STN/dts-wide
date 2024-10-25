@@ -2,7 +2,8 @@
   "name": "@dts-stn/dts-wide",
   "version": "0.0.0",
   "workspaces": [
-    "packages/health-checks"
+    "packages/health-checks",
+    "packages/rest-client"
   ],
   "devDependencies": {
     "@changesets/cli": "^2.27.9"
