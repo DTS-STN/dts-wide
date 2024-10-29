@@ -1,7 +1,7 @@
 /**
  * Represents the health state of a component or system.
  */
-export type HealthStatus = 'HEALTHY' | 'UNHEALTHY' | 'UNKNOWN';
+export type HealthStatus = 'HEALTHY' | 'UNHEALTHY' | 'TIMEDOUT';
 
 /**
  * Represents a health check for a specific system component.
@@ -16,7 +16,7 @@ export interface HealthCheck {
  * Configuration options for running health checks.
  */
 export interface HealthCheckOptions {
-  timeout?: number;
+  timeoutMs?: number;
   includeDetails?: boolean;
   includeComponents?: string[];
   excludeComponents?: string[];
@@ -33,7 +33,7 @@ export interface SystemHealthSummary {
   readonly status: HealthStatus;
   readonly buildId?: string;
   readonly version?: string;
-  readonly responseTime: number;
+  readonly responseTimeMs: number;
   readonly components?: Record<string, ComponentSummary>[];
 }
 
@@ -47,7 +47,7 @@ export const HealthCheckConfig = {
   },
   responses: {
     contentType: 'application/health+json',
-    statusCodes: { healthy: 200, unhealthy: 503, unknown: 500 },
+    statusCodes: { healthy: 200, unhealthy: 503, timedout: 408 },
   },
 } as const;
 
@@ -72,7 +72,7 @@ type HealthCheckResult = HealthCheckSuccess | HealthCheckFailure;
 interface HealthCheckSuccess {
   readonly status: 'HEALTHY';
   readonly name: string;
-  readonly responseTime: number;
+  readonly responseTimeMs: number;
   readonly metadata?: Record<string, string>;
 }
 
@@ -80,9 +80,9 @@ interface HealthCheckSuccess {
  * Represents a failed component health check result.
  */
 interface HealthCheckFailure {
-  readonly status: 'UNHEALTHY' | 'UNKNOWN';
+  readonly status: 'UNHEALTHY' | 'TIMEDOUT';
   readonly name: string;
-  readonly responseTime: number;
+  readonly responseTimeMs: number;
   readonly metadata?: Record<string, string>;
   readonly errorDetails: string;
   readonly stackTrace?: string;
@@ -98,7 +98,7 @@ type ComponentSummary = ComponentSuccessSummary | ComponentFailureSummary;
  */
 interface ComponentSuccessSummary {
   readonly status: 'HEALTHY';
-  readonly responseTime: number;
+  readonly responseTimeMs: number;
   readonly metadata?: Record<string, string>;
 }
 
@@ -106,8 +106,8 @@ interface ComponentSuccessSummary {
  * Summarizes a failed health check for a component.
  */
 interface ComponentFailureSummary {
-  readonly status: 'UNHEALTHY' | 'UNKNOWN';
-  readonly responseTime: number;
+  readonly status: 'UNHEALTHY' | 'TIMEDOUT';
+  readonly responseTimeMs: number;
   readonly metadata?: Record<string, string>;
   readonly errorDetails?: string;
   readonly stackTrace?: string;
@@ -121,7 +121,7 @@ export async function execute(
   options: HealthCheckOptions = {},
 ): Promise<SystemHealthSummary> {
   const {
-    timeout = HealthCheckConfig.defaults.timeout,
+    timeoutMs = HealthCheckConfig.defaults.timeout,
     includeDetails = HealthCheckConfig.defaults.includeDetails,
     includeComponents = healthChecks.map((check) => check.name),
     excludeComponents = [],
@@ -133,13 +133,13 @@ export async function execute(
   );
 
   const startTime = Date.now();
-  const results = await Promise.all(enabledChecks.map((check) => executeWithTimeout(check, timeout)));
-  const responseTime = Date.now() - startTime;
+  const results = await Promise.all(enabledChecks.map((check) => executeWithTimeout(check, timeoutMs)));
+  const responseTimeMs = Date.now() - startTime;
 
   return {
     buildId: metadata?.buildId,
     components: results.map((result) => createComponentSummary(result, includeDetails)),
-    responseTime,
+    responseTimeMs,
     status: results.map((result) => result.status).reduce(aggregateHealthStatus, 'HEALTHY'),
     version: metadata?.version,
   };
@@ -170,7 +170,7 @@ export async function executeWithTimeout(healthCheck: HealthCheck, timeout: numb
     return {
       metadata: healthCheck.metadata,
       name: healthCheck.name,
-      responseTime: Date.now() - startTime,
+      responseTimeMs: Date.now() - startTime,
       status: 'HEALTHY',
     };
   } catch (error) {
@@ -178,9 +178,9 @@ export async function executeWithTimeout(healthCheck: HealthCheck, timeout: numb
       errorDetails: error instanceof Error ? error.message : JSON.stringify(error),
       metadata: healthCheck.metadata,
       name: healthCheck.name,
-      responseTime: Date.now() - startTime,
+      responseTimeMs: Date.now() - startTime,
       stackTrace: error instanceof Error ? error.stack : undefined,
-      status: error instanceof HealthCheckTimeoutError ? 'UNKNOWN' : 'UNHEALTHY',
+      status: error instanceof HealthCheckTimeoutError ? 'TIMEDOUT' : 'UNHEALTHY',
     };
   } finally {
     // finished... abort all unresolved promises
@@ -196,9 +196,9 @@ export function aggregateHealthStatus(prevStatus: HealthStatus, currStatus: Heal
   if (prevStatus === 'UNHEALTHY') return 'UNHEALTHY';
   if (currStatus === 'UNHEALTHY') return 'UNHEALTHY';
 
-  // then prioritize UNKNOWN status
-  if (prevStatus === 'UNKNOWN') return 'UNKNOWN';
-  if (currStatus === 'UNKNOWN') return 'UNKNOWN';
+  // then prioritize TIMEDOUT status
+  if (prevStatus === 'TIMEDOUT') return 'UNHEALTHY';
+  if (currStatus === 'TIMEDOUT') return 'UNHEALTHY';
 
   // guess we're HEALTHY 🏆
   return 'HEALTHY';
@@ -216,7 +216,7 @@ export function createComponentSummary(
 
   const result: ComponentSummary = {
     status: healthCheckResult.status,
-    responseTime: healthCheckResult.responseTime,
+    responseTimeMs: healthCheckResult.responseTimeMs,
     ...(includeMetadata && {
       metadata: healthCheckResult.metadata,
     }),
