@@ -19,13 +19,13 @@ describe('aggregateHealthStatus(..)', () => {
   const cases: [HealthStatus, HealthStatus, HealthStatus][] = [
     ['HEALTHY', 'HEALTHY', 'HEALTHY'],
     ['HEALTHY', 'UNHEALTHY', 'UNHEALTHY'],
-    ['HEALTHY', 'UNKNOWN', 'UNKNOWN'],
+    ['HEALTHY', 'TIMEDOUT', 'UNHEALTHY'],
     ['UNHEALTHY', 'HEALTHY', 'UNHEALTHY'],
     ['UNHEALTHY', 'UNHEALTHY', 'UNHEALTHY'],
-    ['UNHEALTHY', 'UNKNOWN', 'UNHEALTHY'],
-    ['UNKNOWN', 'HEALTHY', 'UNKNOWN'],
-    ['UNKNOWN', 'UNHEALTHY', 'UNHEALTHY'],
-    ['UNKNOWN', 'UNKNOWN', 'UNKNOWN'],
+    ['UNHEALTHY', 'TIMEDOUT', 'UNHEALTHY'],
+    ['TIMEDOUT', 'HEALTHY', 'UNHEALTHY'],
+    ['TIMEDOUT', 'UNHEALTHY', 'UNHEALTHY'],
+    ['TIMEDOUT', 'TIMEDOUT', 'UNHEALTHY'],
   ];
 
   cases.forEach(([prevStatus, currStatus, expectedStatus]) => {
@@ -61,11 +61,11 @@ describe('run(..)', () => {
       { name: 'component2', check: () => delay(timeout << 2) },
     ];
 
-    const summary = execute(healthChecks, { timeout: timeout });
+    const summary = execute(healthChecks, { timeoutMs: timeout });
     vi.advanceTimersByTime(timeout);
     const { status } = await summary;
 
-    expect(status).toEqual('UNKNOWN');
+    expect(status).toEqual('UNHEALTHY');
   });
 
   it('should return correct component details', async () => {
@@ -101,14 +101,14 @@ describe('run(..)', () => {
       {
         component1: {
           status: 'HEALTHY',
-          responseTime: 100,
+          responseTimeMs: 100,
           metadata: { foo: 'bar' },
         },
       },
       {
         component2: {
           status: 'UNHEALTHY',
-          responseTime: 0,
+          responseTimeMs: 0,
           errorDetails: 'Something went wrong',
           stackTrace: expect.any(String) as string,
         },
@@ -146,7 +146,7 @@ describe('run(..)', () => {
     vi.advanceTimersByTime(HealthCheckConfig.defaults.timeout);
     const { status } = await summary;
 
-    expect(status).toEqual('UNKNOWN');
+    expect(status).toEqual('UNHEALTHY');
   });
 
   it('should filter components based on includeComponents', async () => {
@@ -188,21 +188,21 @@ describe('runWithTimeout(..)', () => {
 
     const result = executeWithTimeout(healthCheck, 100);
     vi.advanceTimersByTime(50);
-    const { responseTime, status } = await result;
+    const { responseTimeMs, status } = await result;
 
     expect(status).toEqual('HEALTHY');
-    expect(responseTime).toEqual(50);
+    expect(responseTimeMs).toEqual(50);
   });
 
-  it('should resolve with UNKNOWN status for timed out check', async () => {
+  it('should resolve with TIMEDOUT status for timed out check', async () => {
     const healthCheck: HealthCheck = { name: 'testComponent', check: () => delay(200) };
 
     const result = executeWithTimeout(healthCheck, 100);
     vi.advanceTimersByTime(100);
-    const { responseTime, status } = await result;
+    const { responseTimeMs, status } = await result;
 
-    expect(status).toEqual('UNKNOWN');
-    expect(responseTime).toEqual(100);
+    expect(status).toEqual('TIMEDOUT');
+    expect(responseTimeMs).toEqual(100);
   });
 
   it('should resolve with UNHEALTHY status for failed check', async () => {
@@ -215,10 +215,10 @@ describe('runWithTimeout(..)', () => {
 
     const result = executeWithTimeout(healthCheck, 100);
     vi.advanceTimersByTime(100);
-    const { responseTime, status } = await result;
+    const { responseTimeMs, status } = await result;
 
     expect(status).toEqual('UNHEALTHY');
-    expect(responseTime).toEqual(0);
+    expect(responseTimeMs).toEqual(0);
   });
 
   it('should include component metadata in the result', async () => {
@@ -238,7 +238,7 @@ describe('createComponentSummary(..)', () => {
       {
         status: 'HEALTHY',
         name: 'testComponent',
-        responseTime: 50,
+        responseTimeMs: 50,
         metadata: { foo: 'bar' },
       },
       true,
@@ -247,7 +247,7 @@ describe('createComponentSummary(..)', () => {
     expect(summary).toEqual({
       testComponent: {
         status: 'HEALTHY',
-        responseTime: 50,
+        responseTimeMs: 50,
         metadata: { foo: 'bar' },
       },
     });
@@ -258,7 +258,7 @@ describe('createComponentSummary(..)', () => {
       {
         status: 'UNHEALTHY',
         name: 'testComponent',
-        responseTime: 50,
+        responseTimeMs: 50,
         errorDetails: 'Something went wrong',
         metadata: { foo: 'bar' },
       },
@@ -268,7 +268,7 @@ describe('createComponentSummary(..)', () => {
     expect(summary).toEqual({
       testComponent: {
         status: 'UNHEALTHY',
-        responseTime: 50,
+        responseTimeMs: 50,
         errorDetails: 'Something went wrong',
         metadata: { foo: 'bar' },
       },
@@ -280,7 +280,7 @@ describe('createComponentSummary(..)', () => {
       {
         status: 'UNHEALTHY',
         name: 'testComponent',
-        responseTime: 50,
+        responseTimeMs: 50,
         errorDetails: 'Something went wrong',
         metadata: { foo: 'bar' },
       },
@@ -290,7 +290,7 @@ describe('createComponentSummary(..)', () => {
     expect(summary).toEqual({
       testComponent: {
         status: 'UNHEALTHY',
-        responseTime: 50,
+        responseTimeMs: 50,
       },
     });
   });
@@ -300,7 +300,7 @@ describe('getStatusCode(..)', () => {
   const cases: [HealthStatus, number][] = [
     ['HEALTHY', 200],
     ['UNHEALTHY', 503],
-    ['UNKNOWN', 500],
+    ['TIMEDOUT', 408],
   ];
 
   cases.forEach(([healthStatus, expectedHttpStatus]) => {
