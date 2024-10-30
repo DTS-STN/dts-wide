@@ -192,7 +192,10 @@ export async function executeWithTimeout(healthCheck: HealthCheck, timeout: numb
 /**
  * Reduces multiple {@link HealthStatus} values to a single overall status.
  */
-export function aggregateHealthStatus(prevStatus: OverallHealthStatus, currStatus: ComponentHealthStatus): OverallHealthStatus {
+export function aggregateHealthStatus(
+  prevStatus: OverallHealthStatus,
+  currStatus: ComponentHealthStatus,
+): OverallHealthStatus {
   // prioritize UNHEALTHY status
   if (prevStatus === 'UNHEALTHY') return 'UNHEALTHY';
   if (currStatus === 'UNHEALTHY') return 'UNHEALTHY';
