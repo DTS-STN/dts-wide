@@ -1,7 +1,8 @@
 /**
  * Represents the health state of a component or system.
  */
-export type HealthStatus = 'HEALTHY' | 'UNHEALTHY' | 'TIMEDOUT';
+export type OverallHealthStatus = 'HEALTHY' | 'UNHEALTHY';
+export type ComponentHealthStatus = 'HEALTHY' | 'UNHEALTHY' | 'TIMEDOUT';
 
 /**
  * Represents a health check for a specific system component.
@@ -30,7 +31,7 @@ export interface HealthCheckOptions {
  * Provides an overview of the entire system's health status.
  */
 export interface SystemHealthSummary {
-  readonly status: HealthStatus;
+  readonly status: OverallHealthStatus;
   readonly buildId?: string;
   readonly version?: string;
   readonly responseTimeMs: number;
@@ -47,7 +48,7 @@ export const HealthCheckConfig = {
   },
   responses: {
     contentType: 'application/health+json',
-    statusCodes: { healthy: 200, unhealthy: 503, timedout: 408 },
+    statusCodes: { healthy: 200, unhealthy: 503 },
   },
 } as const;
 
@@ -191,13 +192,12 @@ export async function executeWithTimeout(healthCheck: HealthCheck, timeout: numb
 /**
  * Reduces multiple {@link HealthStatus} values to a single overall status.
  */
-export function aggregateHealthStatus(prevStatus: HealthStatus, currStatus: HealthStatus): HealthStatus {
+export function aggregateHealthStatus(prevStatus: OverallHealthStatus, currStatus: ComponentHealthStatus): OverallHealthStatus {
   // prioritize UNHEALTHY status
   if (prevStatus === 'UNHEALTHY') return 'UNHEALTHY';
   if (currStatus === 'UNHEALTHY') return 'UNHEALTHY';
 
   // then prioritize TIMEDOUT status
-  if (prevStatus === 'TIMEDOUT') return 'UNHEALTHY';
   if (currStatus === 'TIMEDOUT') return 'UNHEALTHY';
 
   // guess we're HEALTHY 🏆
@@ -232,6 +232,6 @@ export function createComponentSummary(
 /**
  * Returns the appropriate HTTP status code based on the provided health status.
  */
-export function getHttpStatusCode(status: HealthStatus): number {
-  return HealthCheckConfig.responses.statusCodes[status.toLowerCase() as Lowercase<HealthStatus>];
+export function getHttpStatusCode(status: OverallHealthStatus): number {
+  return HealthCheckConfig.responses.statusCodes[status.toLowerCase() as Lowercase<OverallHealthStatus>];
 }

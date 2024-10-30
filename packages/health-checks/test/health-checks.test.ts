@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { aggregateHealthStatus, createComponentSummary, executeWithTimeout } from '~/health-checks';
 
 // public api
-import type { HealthCheck, HealthStatus } from '~/index';
+import type { ComponentHealthStatus, HealthCheck, OverallHealthStatus } from '~/index';
 import { HealthCheckConfig, execute, getHttpStatusCode } from '~/index';
 
 // simulates delays in execution
@@ -16,16 +16,13 @@ function delay(timeout: number): Promise<void> {
 }
 
 describe('aggregateHealthStatus(..)', () => {
-  const cases: [HealthStatus, HealthStatus, HealthStatus][] = [
+  const cases: [OverallHealthStatus, ComponentHealthStatus, OverallHealthStatus][] = [
     ['HEALTHY', 'HEALTHY', 'HEALTHY'],
     ['HEALTHY', 'UNHEALTHY', 'UNHEALTHY'],
     ['HEALTHY', 'TIMEDOUT', 'UNHEALTHY'],
     ['UNHEALTHY', 'HEALTHY', 'UNHEALTHY'],
     ['UNHEALTHY', 'UNHEALTHY', 'UNHEALTHY'],
     ['UNHEALTHY', 'TIMEDOUT', 'UNHEALTHY'],
-    ['TIMEDOUT', 'HEALTHY', 'UNHEALTHY'],
-    ['TIMEDOUT', 'UNHEALTHY', 'UNHEALTHY'],
-    ['TIMEDOUT', 'TIMEDOUT', 'UNHEALTHY'],
   ];
 
   cases.forEach(([prevStatus, currStatus, expectedStatus]) => {
@@ -297,10 +294,9 @@ describe('createComponentSummary(..)', () => {
 });
 
 describe('getStatusCode(..)', () => {
-  const cases: [HealthStatus, number][] = [
+  const cases: [OverallHealthStatus, number][] = [
     ['HEALTHY', 200],
     ['UNHEALTHY', 503],
-    ['TIMEDOUT', 408],
   ];
 
   cases.forEach(([healthStatus, expectedHttpStatus]) => {
