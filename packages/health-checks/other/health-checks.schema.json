@@ -5,7 +5,7 @@
   "type": "object",
   "definitions": {
     "healthStatus": {
-      "enum": ["HEALTHY", "UNHEALTHY", "UNKNOWN"]
+      "enum": ["HEALTHY", "UNHEALTHY"]
     }
   },
   "properties": {
