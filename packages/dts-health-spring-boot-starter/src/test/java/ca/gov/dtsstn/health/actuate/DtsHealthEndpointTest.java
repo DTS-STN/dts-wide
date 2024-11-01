@@ -1,6 +1,6 @@
 package ca.gov.dtsstn.health.actuate;
 
-import static ca.gov.dtsstn.health.core.HealthResult.Status.PASS;
+import static ca.gov.dtsstn.health.core.HealthResult.Status.HEALTHY;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -60,9 +60,10 @@ class DtsHealthEndpointTest {
 				.includeDetails(true)
 				.build();
 
-		final var status = PASS;
+		final var status = HEALTHY;
 		final var healthResult = ImmutableHealthResult.builder()
 				.status(status)
+				.responseTimeMs(30L)
 				.build();
 
 		when(healthCheckManager.executeChecks(healthChecks, healthCheckOptions)).thenReturn(healthResult);
@@ -90,9 +91,10 @@ class DtsHealthEndpointTest {
 				.includeDetails(false)
 				.build();
 
-		final var status = PASS;
+		final var status = HEALTHY;
 		final var healthResult = ImmutableHealthResult.builder()
 				.status(status)
+				.responseTimeMs(30L)
 				.build();
 
 		when(healthCheckManager.executeChecks(healthChecks, healthCheckOptions)).thenReturn(healthResult);

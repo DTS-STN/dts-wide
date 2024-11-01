@@ -65,7 +65,7 @@ public class MyHealthCheck implements HealthCheck {
 	}
 
 	@Override
-	public Map<String, String> getInfo() {
+	public Map<String, String> getMetadata() {
 		return Map.of("url", "https://api.example.com/health");
 	}
 }
@@ -90,16 +90,16 @@ The response will return a JSON object containing the overall health status and 
 
 ```
 {
-  "status": "PASS",
+  "status": "HEALTHY",
   "version": "1.0.0",
   "buildId": "your-build-id",
   "components": [
     {
       "name": "myService",
-      "status": "PASS",
-      "responseTime": 50,
+      "status": "HEALTHY",
+      "responseTimeMs": 50,
       "details": null,
-      "info": {
+      "metadata": {
         "url": "https://api.example.com/health"
       }
     }

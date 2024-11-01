@@ -52,7 +52,7 @@ public class DtsHealthEndpoint {
 	 * @param securityContext the security context for the current request
 	 * @param includeComponents the components to include in the health check; if null or empty, all components are included
 	 * @param excludeComponents the components to exclude from the health check; any matching component will not be included
-	 * @param timeout the timeout for the health check in milliseconds
+	 * @param timeoutMs the timeout for the health check in milliseconds
 	 * @param level the detail level of the health check result (currently only "detailed" level is accepted)
 	 * @return a {@link WebEndpointResponse} containing the health result and the corresponding HTTP status
 	 */
@@ -60,12 +60,12 @@ public class DtsHealthEndpoint {
 	public WebEndpointResponse<HealthResult> health(SecurityContext securityContext,
 			@Nullable Collection<String> includeComponents,
 			@Nullable Collection<String> excludeComponents,
-			@Nullable Long timeout,
+			@Nullable Long timeoutMs,
 			@Nullable String level) {
 		final var healthCheckOptions = ImmutableHealthCheckOptions.builder()
 				.includeComponents(requireNonNullElse(includeComponents, emptyList()))
 				.excludeComponents(requireNonNullElse(excludeComponents, emptyList()))
-				.timeoutMillis(requireNonNullElse(timeout, dtsHealthProperties.getDefaultTimeoutMillis()))
+				.timeoutMillis(requireNonNullElse(timeoutMs, dtsHealthProperties.getDefaultTimeoutMillis()))
 				.includeDetails(includeDetails(securityContext, "detailed".equals(level)))
 				.version(dtsHealthProperties.getVersion())
 				.buildId(dtsHealthProperties.getBuildId())
