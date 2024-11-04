@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.core;
+package io.github.dtsstn.health.core;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -13,8 +13,8 @@ import java.util.function.Predicate;
 
 import com.google.common.base.Stopwatch;
 
-import ca.gov.dtsstn.health.core.HealthResult.ComponentHealthResult;
-import ca.gov.dtsstn.health.core.HealthResult.Status;
+import io.github.dtsstn.health.core.HealthResult.ComponentHealthResult;
+import io.github.dtsstn.health.core.HealthResult.Status;
 
 /**
  * Manages the execution and aggregation of health checks for components.

@@ -1,6 +1,6 @@
-package ca.gov.dtsstn.health.actuate;
+package io.github.dtsstn.health.actuate;
 
-import static ca.gov.dtsstn.health.core.HealthResult.Status.UNHEALTHY;
+import static io.github.dtsstn.health.core.HealthResult.Status.UNHEALTHY;
 import static org.springframework.boot.actuate.endpoint.Show.WHEN_AUTHORIZED;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -22,8 +22,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
-import ca.gov.dtsstn.health.core.HealthCheck;
-import ca.gov.dtsstn.health.core.HealthResult;
+import io.github.dtsstn.health.core.HealthCheck;
+import io.github.dtsstn.health.core.HealthResult;
 
 @SpringBootTest(
 		classes = { DtsHealthEndpointIT.TestConfig.class, DtsHealthAutoConfiguration.class },

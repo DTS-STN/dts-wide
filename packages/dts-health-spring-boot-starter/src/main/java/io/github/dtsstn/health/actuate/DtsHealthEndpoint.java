@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.actuate;
+package io.github.dtsstn.health.actuate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElse;
@@ -12,10 +12,10 @@ import org.springframework.boot.actuate.endpoint.web.WebEndpointResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import ca.gov.dtsstn.health.core.HealthCheck;
-import ca.gov.dtsstn.health.core.HealthCheckManager;
-import ca.gov.dtsstn.health.core.HealthResult;
-import ca.gov.dtsstn.health.core.ImmutableHealthCheckOptions;
+import io.github.dtsstn.health.core.HealthCheck;
+import io.github.dtsstn.health.core.HealthCheckManager;
+import io.github.dtsstn.health.core.HealthResult;
+import io.github.dtsstn.health.core.ImmutableHealthCheckOptions;
 
 /**
  * Custom Spring Actuator endpoint for performing health checks on DTS services.

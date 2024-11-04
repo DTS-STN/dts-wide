@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.actuate;
+package io.github.dtsstn.health.actuate;
 
 import java.util.Collection;
 
@@ -9,8 +9,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import ca.gov.dtsstn.health.core.HealthCheck;
-import ca.gov.dtsstn.health.core.HealthCheckManager;
+import io.github.dtsstn.health.core.HealthCheck;
+import io.github.dtsstn.health.core.HealthCheckManager;
 
 /**
  * Auto-configuration class for DTS Health indicators.

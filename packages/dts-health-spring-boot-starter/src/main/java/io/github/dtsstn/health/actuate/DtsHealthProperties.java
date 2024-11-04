@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.actuate;
+package io.github.dtsstn.health.actuate;
 
 import static org.springframework.boot.actuate.endpoint.Show.WHEN_AUTHORIZED;
 

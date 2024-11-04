@@ -5,22 +5,55 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.4</version>
+		<version>3.3.5</version>
 	</parent>
 
-	<groupId>ca.gov.dts-stn</groupId>
+	<groupId>io.github.dts-stn</groupId>
 	<artifactId>dts-health-spring-boot-starter</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0-RC1</version>
 	<packaging>jar</packaging>
 
-	<name>dts-health-spring-boot-starter</name>
+	<name>${project.groupId}:${project.artifactId}</name>
 	<description>A spring boot starter for customizing health checks to conform to DTS health check standards</description>
+	<url>https://github.com/DTS-STN/dts-wide/tree/main/packages/dts-health-spring-boot-starter</url>
+
+	<developers>
+		<developer>
+			<name>Nicholas Ly</name>
+			<email>nicholas.ly@hrsdc-rhdcc.gc.ca</email>
+			<organization>Government of Canada</organization>
+			<organizationUrl>https://canada.ca/</organizationUrl>
+		</developer>
+
+		<developer>
+			<name>Greg Baker</name>
+			<email>gregory.j.baker@hrsdc-rhdcc.gc.ca</email>
+			<organization>Government of Canada</organization>
+			<organizationUrl>https://canada.ca/</organizationUrl>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git://github.com/DTS-STN/dts-wide.git</connection>
+		<developerConnection>scm:git:ssh://github.com:DTS-STN/dts-wide.git</developerConnection>
+		<url>https://github.com/DTS-STN/dts-wide/tree/main/packages/dts-health-spring-boot-starter</url>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>http://www.opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
 
 	<properties>
 		<java.version>21</java.version>
-		
+
 		<guava.version>33.3.1-jre</guava.version>
 		<immutables.version>2.10.1</immutables.version>
+
+		<central-publishing-maven-plugin.version>0.6.0</central-publishing-maven-plugin.version>
+		<maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -91,6 +124,56 @@
 							<version>${immutables.version}</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<additionalOptions>-Xdoclint:none</additionalOptions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>${maven-gpg-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>${central-publishing-maven-plugin.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>central</publishingServerId>
 				</configuration>
 			</plugin>
 		</plugins>
