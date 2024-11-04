@@ -22,12 +22,11 @@ public interface HealthResult {
 	String CONTENT_TYPE = "application/health+json";
 
 	/**
-	 * The possible statuses for a health check result.
+	 * The possible statuses for a system health check result.
 	 */
 	enum Status {
-		PASS(200),
-		FAIL(503),
-		UNKNOWN(500);
+		HEALTHY(200),
+		UNHEALTHY(503);
 
 		private final int httpStatus;
 
@@ -46,6 +45,13 @@ public interface HealthResult {
 	 * @return the {@link Status} of the health check
 	 */
 	Status getStatus();
+
+	/**
+	 * Returns the response time for the overall system health check, in milliseconds.
+	 *
+	 * @return the response time of the overall system health check
+	 */
+	Long getResponseTimeMs();
 
 	/**
 	 * Returns the version of the application or service being checked, if available.
@@ -78,6 +84,15 @@ public interface HealthResult {
 	interface ComponentHealthResult {
 
 		/**
+		 * The possible statuses for a component health check result.
+		 */
+		enum Status {
+			HEALTHY,
+			UNHEALTHY,
+			TIMEDOUT;
+		}
+
+		/**
 		 * Returns the name of the component being checked.
 		 *
 		 * @return the component name
@@ -92,28 +107,37 @@ public interface HealthResult {
 		Status getStatus();
 
 		/**
-		 * Returns the response time for the health check, in milliseconds, if available.
+		 * Returns the response time for the individual component health check, in milliseconds, if available.
 		 *
-		 * @return the response time, or {@code null} if not provided
+		 * @return the response time of the individual component health check, or {@code null} if not provided
 		 */
 		@Nullable
-		Long getResponseTime();
+		Long getResponseTimeMs();
 
 		/**
-		 * Returns additional details about the health check result, if available.
+		 * Returns metadata associated with the component health check, if available.
 		 *
-		 * @return a string with details, or {@code null} if not provided
+		 * @return a map of metadata entries, or {@code null} if no metadata is provided
 		 */
 		@Nullable
-		String getDetails();
+		Map<String, String> getMetadata();
 
 		/**
-		 * Returns additional information related to the health check, if available.
+		 * Returns additional details about any errors encountered during the component health check, if available.
 		 *
-		 * @return a map of additional info, or {@code null} if not provided
+		 * @return a description of the error, or {@code null} if no error occurred or no error is available
 		 */
 		@Nullable
-		Map<String, String> getInfo();
+		String getErrorDetails();
+
+
+		/**
+		 * Returns the stack trace associated with an error during the component health check, if available.
+		 *
+		 * @return the stack trace as a string, or {@code null} if no error occurred or no error is available
+		 */
+		@Nullable
+		String getStackTrace();
 
 	}
 

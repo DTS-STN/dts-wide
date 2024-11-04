@@ -1,11 +1,9 @@
 package ca.gov.dtsstn.health.core;
 
-import static ca.gov.dtsstn.health.core.HealthResult.Status.FAIL;
-import static ca.gov.dtsstn.health.core.HealthResult.Status.PASS;
-import static ca.gov.dtsstn.health.core.HealthResult.Status.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -33,9 +31,11 @@ public class HealthCheckManager {
 	public HealthResult executeChecks(Collection<HealthCheck> healthChecks, HealthCheckOptions healthCheckOptions) {
 		final var isComponentIncluded = isComponentIncluded(healthCheckOptions.getIncludeComponents(), healthCheckOptions.getExcludeComponents());
 
+		final var stopwatch = Stopwatch.createStarted();
+
 		final var componentHealthResults = healthChecks.parallelStream()
 				.filter(isComponentIncluded)
-				.map(healthCheck -> executeCheckWithTimeout(healthCheck, healthCheckOptions.getTimeoutMillis()))
+				.map(healthCheck -> executeCheckWithTimeout(healthCheck, healthCheckOptions.getTimeoutMillis(), healthCheckOptions.getIncludeDetails()))
 				.toList();
 
 		final var allStatuses = componentHealthResults.stream()
@@ -44,17 +44,12 @@ public class HealthCheckManager {
 
 		final var aggregateStatus = aggregateStatus(allStatuses);
 
-		if (healthCheckOptions.getIncludeDetails()) {
-			return ImmutableHealthResult.builder()
-					.status(aggregateStatus)
-					.version(healthCheckOptions.getVersion())
-					.buildId(healthCheckOptions.getBuildId())
-					.components(componentHealthResults)
-					.build();
-		}
-
 		return ImmutableHealthResult.builder()
 				.status(aggregateStatus)
+				.responseTimeMs(stopwatch.elapsed(MILLISECONDS))
+				.version(healthCheckOptions.getVersion())
+				.buildId(healthCheckOptions.getBuildId())
+				.components(componentHealthResults)
 				.build();
 	}
 
@@ -81,63 +76,79 @@ public class HealthCheckManager {
 	 *
 	 * @param healthCheck the {@link HealthCheck} to execute
 	 * @param timeoutMillis the timeout duration in milliseconds
+	 * @param includeDetails whether to include detailed health check results
 	 * @return the {@link ComponentHealthResult} of the executed health check
 	 */
-	protected ComponentHealthResult executeCheckWithTimeout(HealthCheck healthCheck, long timeoutMillis) {
-		final var future = CompletableFuture.supplyAsync(() -> executeCheck(healthCheck));
+	protected ComponentHealthResult executeCheckWithTimeout(HealthCheck healthCheck, long timeoutMillis, boolean includeDetails) {
+		final var future = CompletableFuture.supplyAsync(() -> executeCheck(healthCheck, includeDetails));
 
 		try {
 			return future.get(timeoutMillis, MILLISECONDS);
 		}
 		catch (ExecutionException | TimeoutException e) {
-			return buildUnknownResult(healthCheck.getName(), healthCheck.getInfo(), timeoutMillis, e);
+			return buildTimedOutResult(healthCheck.getName(), healthCheck.getMetadata(), timeoutMillis, includeDetails, e);
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			return buildUnknownResult(healthCheck.getName(), healthCheck.getInfo(), timeoutMillis, e);
+			return buildTimedOutResult(healthCheck.getName(), healthCheck.getMetadata(), timeoutMillis, includeDetails, e);
 		}
 	}
 
 	/**
-	 * Builds a health result indicating an unknown status for a health check.
+	 * Builds a health result indicating a timed out status for a health check.
 	 *
 	 * @param healthCheckName the name of the health check
-	 * @param healthCheckInfo any additional information of the health check
+	 * @param metadata any additional metadata of the health check
 	 * @param timeoutMillis the timeout duration in milliseconds
-	 * @param e the exception that caused the unknown status
-	 * @return a {@link ComponentHealthResult} indicating an unknown status
+	 * @param includeDetails whether to include detailed health check results
+	 * @param e the exception that caused the timed out status
+	 * @return a {@link ComponentHealthResult} indicating an timed out status
 	 */
-	protected ComponentHealthResult buildUnknownResult(String healthCheckName, Map<String, String> healthCheckInfo, long timeoutMillis, Exception e) {
-		return ImmutableComponentHealthResult.builder()
+	protected ComponentHealthResult buildTimedOutResult(String healthCheckName, Map<String, String> metadata, long timeoutMillis, boolean includeDetails, Exception e) {
+		final var resultBuilder = ImmutableComponentHealthResult.builder()
 				.name(healthCheckName)
-				.info(healthCheckInfo)
-				.status(UNKNOWN)
-				.details(format("Health check [%s] failed with timeout [%d ms]. Exception: %s", healthCheckName, timeoutMillis, e.toString()))
-				.build();
+				.status(ComponentHealthResult.Status.TIMEDOUT);
+
+		if (includeDetails) {
+			resultBuilder.metadata(metadata)
+					.errorDetails(format("Health check [%s] failed with timeout [%d ms]. Exception: [%s]", healthCheckName, timeoutMillis, e.toString()))
+					.stackTrace(Arrays.toString(e.getStackTrace()));
+		}
+
+		return resultBuilder.build();
 	}
 
 	/**
 	 * Executes a single health check and records its result.
 	 *
 	 * @param healthCheck the {@link HealthCheck} to execute
+	 * @param includeDetails whether to include detailed health check results
 	 * @return the {@link ComponentHealthResult} of the executed health check
 	 */
-	protected ComponentHealthResult executeCheck(HealthCheck healthCheck) {
+	protected ComponentHealthResult executeCheck(HealthCheck healthCheck, boolean includeDetails) {
 		final var resultBuilder = ImmutableComponentHealthResult.builder()
-				.name(healthCheck.getName())
-				.info(healthCheck.getInfo());
+				.name(healthCheck.getName());
+
+		if (includeDetails) {
+			resultBuilder.metadata(healthCheck.getMetadata());
+		}
 
 		final var stopwatch = Stopwatch.createStarted();
 
 		try {
 			healthCheck.execute();
-			resultBuilder.status(PASS);
+			resultBuilder.status(ComponentHealthResult.Status.HEALTHY);
 		}
-		catch (Exception exception) {
-			resultBuilder.status(FAIL).details(exception.getMessage());
+		catch (Exception e) {
+			resultBuilder.status(ComponentHealthResult.Status.UNHEALTHY);
+
+			if (includeDetails) {
+				resultBuilder.errorDetails(e.toString())
+						.stackTrace(Arrays.toString(e.getStackTrace()));
+			}
 		}
 		finally {
-			resultBuilder.responseTime(stopwatch.elapsed(MILLISECONDS));
+			resultBuilder.responseTimeMs(stopwatch.elapsed(MILLISECONDS));
 		}
 
 		return resultBuilder.build();
@@ -146,13 +157,13 @@ public class HealthCheckManager {
 	/**
 	 * Aggregates the statuses of multiple component health results into a single status.
 	 *
-	 * @param statuses the collection of {@link ComponentHealthResult} to aggregate
+	 * @param statuses the collection of {@link ComponentHealthResult} statuses to aggregate
 	 * @return the overall aggregated {@link Status}
 	 */
-	protected Status aggregateStatus(Collection<Status> statuses) {
-		if (statuses.contains(FAIL)) { return FAIL; }
-		if (statuses.contains(UNKNOWN)) { return UNKNOWN; }
-		return PASS;
+	protected Status aggregateStatus(Collection<ComponentHealthResult.Status> statuses) {
+		if (statuses.contains(ComponentHealthResult.Status.UNHEALTHY)) { return Status.UNHEALTHY; }
+		if (statuses.contains(ComponentHealthResult.Status.TIMEDOUT)) { return Status.UNHEALTHY; }
+		return Status.HEALTHY;
 	}
 
 }
