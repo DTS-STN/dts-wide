@@ -1,6 +1,6 @@
-package ca.gov.dtsstn.health.actuate;
+package io.github.dtsstn.health.actuate;
 
-import static ca.gov.dtsstn.health.core.HealthResult.Status.HEALTHY;
+import static io.github.dtsstn.health.core.HealthResult.Status.HEALTHY;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -17,10 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.actuate.endpoint.SecurityContext;
 import org.springframework.boot.actuate.endpoint.Show;
 
-import ca.gov.dtsstn.health.core.HealthCheck;
-import ca.gov.dtsstn.health.core.HealthCheckManager;
-import ca.gov.dtsstn.health.core.ImmutableHealthCheckOptions;
-import ca.gov.dtsstn.health.core.ImmutableHealthResult;
+import io.github.dtsstn.health.core.HealthCheck;
+import io.github.dtsstn.health.core.HealthCheckManager;
+import io.github.dtsstn.health.core.ImmutableHealthCheckOptions;
+import io.github.dtsstn.health.core.ImmutableHealthResult;
 
 @ExtendWith(MockitoExtension.class)
 class DtsHealthEndpointTest {

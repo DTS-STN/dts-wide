@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.core;
+package io.github.dtsstn.health.core;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,8 +16,8 @@ import org.mockito.Mock;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import ca.gov.dtsstn.health.core.HealthResult.ComponentHealthResult;
-import ca.gov.dtsstn.health.core.HealthResult.Status;
+import io.github.dtsstn.health.core.HealthResult.ComponentHealthResult;
+import io.github.dtsstn.health.core.HealthResult.Status;
 
 @ExtendWith(MockitoExtension.class)
 class HealthCheckManagerTest {

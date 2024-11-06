@@ -14,9 +14,9 @@ Add the following dependency to your `pom.xml`:
 
 ```
 <dependency>
-	<groupId>ca.gov.dts-stn</groupId>
+	<groupId>io.github.dts-stn</groupId>
 	<artifactId>dts-health-spring-boot-starter</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0-RC1</version>
 </dependency>
 ```
 
@@ -50,7 +50,7 @@ dts-health:
 To implement a health check, create a class that implements the `HealthCheck` interface:
 
 ```
-import ca.gov.dtsstn.health.core.HealthCheck;
+import io.github.dtsstn.health.core.HealthCheck;
 
 public class MyHealthCheck implements HealthCheck {
 	

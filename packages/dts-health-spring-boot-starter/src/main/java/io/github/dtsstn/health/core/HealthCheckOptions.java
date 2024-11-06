@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.core;
+package io.github.dtsstn.health.core;
 
 import java.util.Set;
 

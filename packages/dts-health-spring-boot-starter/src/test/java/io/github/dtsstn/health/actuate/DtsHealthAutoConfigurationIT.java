@@ -1,4 +1,4 @@
-package ca.gov.dtsstn.health.actuate;
+package io.github.dtsstn.health.actuate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import ca.gov.dtsstn.health.core.HealthCheckManager;
+import io.github.dtsstn.health.core.HealthCheckManager;
 
 class DtsHealthAutoConfigurationIT {
 
